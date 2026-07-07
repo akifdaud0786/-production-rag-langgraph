@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.egg-info/
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+evaluation/results.json
+/tmp/flashrank_cache/
+.DS_Store
+flashrank_cache/
+qdrant_db/

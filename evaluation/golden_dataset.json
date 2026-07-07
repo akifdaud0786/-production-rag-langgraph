@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What environment variable configures which vector backend the system uses?",
+    "ground_truth": "The VECTOR_BACKEND environment variable selects between 'qdrant' (local/dev) and 'vertex' (Vertex AI Vector Search, production)."
+  },
+  {
+    "question": "Which model does the LLM gateway use as its primary inference model?",
+    "ground_truth": "Llama 3.3 70B (llama-3.3-70b-versatile) served via Groq is the primary model, with Llama 3.1 8B (llama-3.1-8b-instant) as the fallback."
+  },
+  {
+    "question": "How does the system distinguish true data from noisy data during retrieval?",
+    "ground_truth": "It performs vector similarity search for recall, then re-ranks the results with a FlashRank cross-encoder against the standalone query and drops chunks below RERANK_MIN_SCORE."
+  },
+  {
+    "question": "What triggers the query refinement loop in the LangGraph workflow?",
+    "ground_truth": "The Critique & Evaluate node judges the draft answer against retrieved context; if not satisfactory and the refine iteration limit hasn't been reached, the graph loops back through Refine Query and Retrieve again."
+  },
+  {
+    "question": "What is the maximum number of refine iterations by default?",
+    "ground_truth": "MAX_REFINE_ITERATIONS defaults to 2."
+  },
+  {
+    "question": "Which component provides conversation memory across turns?",
+    "ground_truth": "LangGraph's MemorySaver checkpointer, keyed by thread_id, persists conversation state across turns."
+  },
+  {
+    "question": "What GCP service stores the raw and processed documents?",
+    "ground_truth": "Google Cloud Storage (GCS) buckets — a raw bucket for uploaded documents and a processed bucket for cleaned/normalized text."
+  },
+  {
+    "question": "What library is used for embeddings in the ingestion pipeline?",
+    "ground_truth": "A local sentence-transformers model (default all-MiniLM-L6-v2) via langchain_huggingface.HuggingFaceEmbeddings."
+  },
+  {
+    "question": "How are PII leaks prevented in requests and responses?",
+    "ground_truth": "Presidio's AnalyzerEngine and AnonymizerEngine redact detected PII from both incoming queries and generated answers before they are logged or returned."
+  },
+  {
+    "question": "What happens if a prompt injection attempt is detected?",
+    "ground_truth": "The input guardrail regex patterns match the injection attempt and the request is rejected with a 400 error before reaching the LangGraph pipeline."
+  },
+  {
+    "question": "Which metadata store is used alongside Vertex AI Vector Search?",
+    "ground_truth": "Firestore stores chunk text and metadata, since Vertex AI Vector Search only efficiently stores vectors and ids."
+  },
+  {
+    "question": "What tool re-ranks retrieved chunks?",
+    "ground_truth": "FlashRank, a local cross-encoder re-ranker (default model ms-marco-MiniLM-L-12-v2)."
+  },
+  {
+    "question": "Which CI/CD tool builds and deploys the containers?",
+    "ground_truth": "Google Cloud Build, defined in cloudbuild.yaml, builds container images, pushes them to Artifact Registry, and deploys to Cloud Run."
+  },
+  {
+    "question": "What does the API do if both the primary and fallback LLM calls fail?",
+    "ground_truth": "The LLM gateway raises an LLMGatewayError after retry attempts on both models are exhausted, and the API returns a 502 error to the caller."
+  },
+  {
+    "question": "What framework computes the RAG evaluation metrics?",
+    "ground_truth": "RAGAS, computing faithfulness, answer relevancy, context precision, and context recall against the golden dataset."
+  }
+]
