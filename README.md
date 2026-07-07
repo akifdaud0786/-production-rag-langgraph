@@ -1,3 +1,13 @@
+---
+title: Production RAG API
+emoji: 🧠
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Production-Grade Advanced RAG — LangGraph · GCP · Groq
 
 An enterprise-grade, cyclic Retrieval-Augmented Generation system that tells the
