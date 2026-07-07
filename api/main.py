@@ -12,8 +12,10 @@ import os
 import time
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
+import shutil
 
 from api.schemas import ChunkResponse, HealthResponse, QueryRequest, QueryResponse
 from core.graph import run_query
@@ -58,6 +60,33 @@ GUARDRAILS_ENABLED = os.getenv("GUARDRAILS_ENABLED", "true").lower() == "true"
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok", vector_backend=os.getenv("VECTOR_BACKEND", "qdrant"))
+
+
+@app.post("/ingest")
+def ingest(file: UploadFile = File(...)):
+    logger.info("Ingestion request received for file: %s", file.filename)
+    temp_dir = Path("data/temp_upload")
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    file_path = temp_dir / file.filename
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        from ingestion.pipeline import run as run_ingestion
+        run_ingestion(source_dir=str(temp_dir), gcs_bucket=None, gcs_prefix="")
+        return {"status": "success", "message": f"Successfully ingested {file.filename}"}
+    except Exception as e:
+        logger.exception("Ingestion failed for %s", file.filename)
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if file_path.exists():
+            file_path.unlink()
+        try:
+            temp_dir.rmdir()
+        except Exception:
+            pass
+
 
 
 @app.post("/query", response_model=QueryResponse)

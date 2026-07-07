@@ -147,7 +147,6 @@ with st.sidebar:
     st.subheader("Gateway API URL")
     st.code(API_URL, language="bash")
 
-    st.divider()
     st.subheader("📁 Upload Document")
     st.caption("Ingest new files directly into the Qdrant database.")
     
@@ -158,33 +157,17 @@ with st.sidebar:
     )
     
     if uploaded_file is not None:
-        temp_dir = ROOT_DIR / "data" / "temp_upload"
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        
-        file_path = temp_dir / uploaded_file.name
-        
-        # Save the uploaded file locally
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-            
-        with st.spinner("Parsing and vectorizing doc..."):
+        with st.spinner("Uploading and indexing doc on backend..."):
             try:
-                # Lazy load ingestion pipeline
-                from ingestion.pipeline import run as run_ingestion
-                
-                # Run the pipeline locally
-                run_ingestion(source_dir=str(temp_dir), gcs_bucket=None, gcs_prefix="")
-                st.success(f"🎉 Successfully Ingested: {uploaded_file.name}")
+                # Send the file via POST request to backend API /ingest endpoint
+                files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                response = requests.post(f"{API_URL}/ingest", files=files, timeout=300)
+                if response.status_code == 200:
+                    st.success(f"🎉 Successfully Ingested: {uploaded_file.name}")
+                else:
+                    st.error(f"Ingestion failed: {response.text}")
             except Exception as e:
                 st.error(f"Ingestion failed: {e}")
-            finally:
-                # Clean up file and directory
-                if file_path.exists():
-                    file_path.unlink()
-                try:
-                    temp_dir.rmdir()
-                except Exception:
-                    pass
 
 # 4. Main Console Header
 st.markdown("<h1 class='header-title'>🧠 Enterprise RAG Console</h1>", unsafe_allow_html=True)
